@@ -1,5 +1,22 @@
 # filamentation_data_proc
-Basic functions for experimental data processing for data obtained in experiments on femtosecond laser filamentation conducted in Relativistic Laser Plasma laboratory, ILC MSU. Includes auxiliary functions for data reading, plotting, searching plot parameters for better plot quality, some values and parameters conversions, and for correct energy retriving from the energy detector waveform. Also includes basic functions for data samples and pulse energy matching. 
+Basic functions for experimental data processing for data obtained in experiments on femtosecond laser filamentation conducted in Relativistic Laser Plasma laboratory, ILC MSU. Includes auxiliary functions for data reading, plotting, searching plot parameters for better plot quality, some values and parameters conversions, and for correct energy retriving from the energy detector waveform. Also includes basic functions for data samples and pulse energy matching.
+
+## Dependencies
+To use the module you will need installed python3 on your machine.
+
+The module uses functions from numpy, matplolib, os, sys, shutil and struct modules, so you will need to have this modules installed as well.
+
+## Installing
+To install the module on linux you need to run 'setup.py' script:
+```
+sudo python3 setup.py install
+```
+
+## Uninstalling
+To uninstall run 'uninstall.sh':
+```
+sudo sh uninstall.sh
+```
 
 ## Project contents
 ### ./data_proc/data_proc_basics_script
