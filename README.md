@@ -1,7 +1,7 @@
 # filamentation_data_proc
-Basic functions for experimental data processing for data obtained in experiments on femtosecond laser filamentation conducted in Relativistic Laser Plasma laboratory, ICL MSU. Includes auxiliary functions for data reading, plotting, searching plot parameters for better plot quality, some values and parameters conversions, and for correct energy retriving from the energy detector waveform. Also includes basic functions for data samples and pulse energy matching. 
+Basic functions for experimental data processing for data obtained in experiments on femtosecond laser filamentation conducted in Relativistic Laser Plasma laboratory, ILC MSU. Includes auxiliary functions for data reading, plotting, searching plot parameters for better plot quality, some values and parameters conversions, and for correct energy retriving from the energy detector waveform. Also includes basic functions for data samples and pulse energy matching. 
 
-## Project contents.
+## Project contents
 ### ./data_proc/data_proc_basics_script
 Functions for:
 - acoustics ('.bin') and ('.dat') energies data files reading;
@@ -22,3 +22,10 @@ Functions for:
 Functions for:
 - plot waveforms from oscilloscope ('.bin' data);
 - modes and luminescence ('heat map') plotter (with and without latex).
+
+### ./compare_ac_with_en
+Functions for:
+- matching data with energies accounting for lost shots in data and file with energies for data obtained on different computers (for user or program-defined time shift between the data);
+- matching data with energies for data obtained at the same computer;
+- checking if there were 'lost' strobs;
+- some auxiliary funcrions for data mathcing.
