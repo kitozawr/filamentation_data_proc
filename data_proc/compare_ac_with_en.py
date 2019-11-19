@@ -82,11 +82,11 @@ def check_if_there_were_lost(filename_en, foldername_ac, ext='.bin', col_en=9, c
 	en_diff = np.diff(time_en)
 
 	if abs((filenames_ac_times[-1] - filenames_ac_times[0]) - (len(filenames_ac_times)-1)*100.0) < threshold and np.all(en_diff[en_diff < DELTA_en]):
-		print("Время по началу и концу выборки: {}, время по длине выборки: {}".format(filenames_ac_times[-1] - filenames_ac_times[0], len(filenames_ac_times)*100.0))
+		#print("Время по началу и концу выборки: {}, время по длине выборки: {}".format(filenames_ac_times[-1] - filenames_ac_times[0], len(filenames_ac_times)*100.0))
 		return(True)
 	else:
 		if abs((filenames_ac_times[-1] - filenames_ac_times[0]) - len(filenames_ac_times)*100.0) >= threshold:
-			print("Время по началу и концу выборки: {}, время по длине выборки: {}".format(filenames_ac_times[-1] - filenames_ac_times[0], len(filenames_ac_times)*100.0))
+			#print("Время по началу и концу выборки: {}, время по длине выборки: {}".format(filenames_ac_times[-1] - filenames_ac_times[0], len(filenames_ac_times)*100.0))
 			print("Были пропущены файлы с акустикой")
 		if np.all(en_diff >= DELTA_en):
 			print("Были сбои в записи энергии")
