@@ -93,22 +93,7 @@ def read_en(filename_en, line_length=17, col_en=9, col_fon=8, col_trig=6, col_ti
 		if strob_diff_new > strob_diff:
 			strob_diff = strob_diff_new
 			i_start = i # В i_start записывается текущий номер.
-	### TEMP
-	'''
-	plt.figure(figsize=(10.5, 9.0), dpi=300)
-	plt.grid()
-	plt.minorticks_on()
-	print(time_en[0:i_start+5])
-	plt.plot(time_en[0:i_start+5], strob[0:i_start+5], '.', color = 'r')
-	plt.plot(time_en[0:i_start+5], strob[0:i_start+5], 'k', color = 'k')
-	filename_fig = (os.sep).join(filename_en.split(os.sep)[0:-1])
-	print(filename_fig)
-	filename_fig_end = filename_en.split(os.sep)[-1]
-	filename_fig_end = "strob_"+filename_fig_end.split(".dat")[0]+".png"
-	filename_fig = os.path.join(filename_fig, filename_fig_end)
-	plt.savefig(filename_fig, bbox_inches='tight')
-	plt.close()
-	'''
+
 	return(time_en, energies, i_start, lc)
 
 #%% Подсчёт времени по названию файла с люминисценцией/модами.
@@ -197,15 +182,22 @@ def max_find_borders(wf, dt):
 	left_border = max_coord - shift_left_num
 	right_border = max_coord - shift_right_num
 
-	return((left_border, right_border)) 
+	return((left_border, right_border))
 
-def read_maxima(folder_ac, filenames_ac_times, filenames_ac_info, ext = '.bin', area=(0,1920,0,1200), fon_coeff=1.0, old_osc=False, limit_max=False, inv=False):
+def read_maxima(folder_ac, filenames_ac_times, filenames_ac_info, ext = '.bin', area=(0,1920,0,1200), fon_coeff=1.0, old_osc=False, limit_max=False, inv=False, ac_lims=None, use_run_av=False, av_params=(11,20)):
+
 	'''
 	Функция вычисляет максимум для файлов типа .tif (интерферограммы) и интеграл по площади для файлов типа '.dat' (люминесценция).
+
+	Параметры:
+	limit_max: True - ограничить диапазон поиска максимума границами, найденными функцией max_find_borders (для файлов калибровки).
+	           False - искать в диапазоне при i>indent.
+	ac_lims: массив из двух элементов (ndarray), содержащий начало и конец области, в которой будет осуществляться поиск максимума (для акустики), либо None.
+	use_run_av: использовать или не использовать бегущее среднее.
 	'''
 
 	#%% Константы
-	indent = 15
+	indent = 15 #default 15
 	fon_size = 20 #Размер области для вычисления фона на кадрах с люминесценцией.
 	#fon_coeff = 1.0 # Коэффициент, на который домножается фон для определения "содержательных" данных на кадрах с люминесценцией.
 	max_level = 4000 # Только данные, не превышающие это значение, будут использованы при сопоставлении (нужно, чтобы отбросить пробой).
@@ -213,38 +205,24 @@ def read_maxima(folder_ac, filenames_ac_times, filenames_ac_info, ext = '.bin', 
 	maxima = np.zeros(len(filenames_ac_times))
 
 	if ext == '.bin':
-		if limit_max:
+		for i in range(0,len(filenames_ac_times)):
 			if old_osc:
-				for i in range(0,len(filenames_ac_times)):
-					dt, dV, wf = read_bin(os.path.join(folder_ac, "__".join(filenames_ac_info[i]) + ext))
-					max_pos = max_find_borders(wf, dt)
-					if inv:
-						maxima[i] = np.amin(wf[max_pos[0]:max_pos[1]])
-					else:
-						maxima[i] = np.amax(wf[max_pos[0]:max_pos[1]])
+				dt, dV, wf = read_bin(os.path.join(folder_ac, "__".join(filenames_ac_info[i]) + ext))
 			else:
-				for i in range(0,len(filenames_ac_times)):
-					dt, dV, wf = read_bin_new_program(os.path.join(folder_ac, "__".join(filenames_ac_info[i]) + ext))
-					max_pos = max_find_borders(wf, dt)
-					if inv:
-						maxima[i] = np.amin(wf[max_pos[0]:max_pos[1]])
-					else:
-						maxima[i] = np.amax(wf[max_pos[0]:max_pos[1]])
-		else:
-			if old_osc:
-				for i in range(0,len(filenames_ac_times)):
-					dt, dV, wf = read_bin(os.path.join(folder_ac, "__".join(filenames_ac_info[i]) + ext))
-					if inv:
-						maxima[i] = np.amin(wf[indent:])
-					else:
-						maxima[i] = np.amax(wf[indent:])
+				dt, dV, wf = read_bin_new_program(os.path.join(folder_ac, "__".join(filenames_ac_info[i]) + ext))
+			if limit_max:
+				max_pos = max_find_borders(wf, dt)
+			elif ac_lims is None:
+				max_pos = [indent, len(wf)]
 			else:
-				for i in range(0,len(filenames_ac_times)):
-					dt, dV, wf = read_bin_new_program(os.path.join(folder_ac, "__".join(filenames_ac_info[i]) + ext))
-					if inv:
-						maxima[i] = np.amin(wf[indent:])
-					else:
-						maxima[i] = np.amax(wf[indent:])
+				max_pos = [int(round(ac_lims[0]/dt)), min(int(round(ac_lims[1]/dt)), len(wf))]
+			wf = wf[max_pos[0]:max_pos[1]]
+			for av_par in av_params:
+				wf = run_av(wf, window = av_par)
+			if inv:
+				maxima[i] = np.amin(wf)
+			else:
+				maxima[i] = np.amax(wf)
 	elif ext == '.tif':
 		for i in range(0,len(filenames_ac_times)):
 			data = plt.imread(os.path.join(folder_ac, "__".join(filenames_ac_info[i]) + ext))
@@ -260,7 +238,6 @@ def read_maxima(folder_ac, filenames_ac_times, filenames_ac_info, ext = '.bin', 
 					continue
 			else:
 				data = plt.imread(filename)
-			#print(str(filename) + ' ' + str(width) + ' ' + str(height))
 			fon = (np.mean(data[0:fon_size, 0:fon_size]) + np.mean(data[0:fon_size, -fon_size:]) + np.mean(data[-fon_size:, 0:fon_size]) + np.mean(data[-fon_size:, -fon_size:]))/4.0
 			data = data[area[2]:area[3], area[0]:area[1]]
 			data = data-fon_coeff*fon
@@ -364,6 +341,21 @@ def make_file_list_to_compare_new_program(foldername_ac, ext):
 	filenames_ac_info = [f[1] for f in filenames_ac_info_ext]
 
 	return(filenames_ac_times, filenames_ac_info)
+
+def autodetect_en_line_length(filename_en):
+	#%%Константы
+	max_length = 40 #Maximal possible line length.
+
+	#Читаем первые 2 строки из файла с энергиями.
+	with open(filename_en,'r') as f:
+		first_string = f.readline()
+		next_string = f.readline()
+
+	length = len(first_string.split())
+	if length <= max_length and next_string != '':
+		return length
+	else:
+		return "FAIL"
 
 def read_en_all_data(filename_en, line_length=17, col_en=9, col_fon=8, col_trig=6, col_times=1):
 	# Чтение данных из файла с энергиями.
