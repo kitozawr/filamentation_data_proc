@@ -15,6 +15,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import struct
 import scipy.ndimage as ndimg
+import os
 
 def rotate(data, angle):
 	rot_data = ndimg.interpolation.rotate(input=data, angle=angle, order=0, prefilter=False, reshape=False)
@@ -53,6 +54,37 @@ def read_dat(filename):
 			print("Warning: 8bit image. Read with adjustment to 12bit format (magnified by 8).")
 		except:
 			print("ERROR: could not read data file {}".format(filename))
+	data = np.reshape(data, (height, width))
+
+	return(data, width, height)
+
+def read_raw_Mind_Vision(filename):
+	"""
+	Function opens .RAW file from chineese CCD. The data should be in format of 16-bit raw matrix.
+
+	Parameters:
+	-------------------------------------------
+	- filename : path (string)
+		Path to the file to read data from.
+	"""
+	
+	#Constants.
+	width = 1280 #Длина кадра.
+	height = 960 #Ширина кадра.
+
+	#binary data file reading
+	with open(filename, "rb") as binary_file:
+		data_bin = binary_file.read()
+
+	f_size = width*height
+
+	try:
+		s = '<H'+'H'*(f_size - 1)
+		data = np.fromiter(struct.unpack(s, data_bin), dtype='uint16')
+	except struct.error:
+		print("In data_proc/lumin_proc, in function 'read_raw_Mind_Vision':")
+		print("ERROR: could not read data file {}".format(filename))
+
 	data = np.reshape(data, (height, width))
 
 	return(data, width, height)
@@ -132,7 +164,7 @@ def read_bd_map(bd_map_file):
 	bd_mult = np.genfromtxt(bd_map_file, skip_header=1, max_rows=single_start_num-1, dtype = 'uint16')
 	bd_single = np.genfromtxt(bd_map_file, skip_header=single_start_num+1, dtype = 'uint16')
 	print("Bd map has been successfully read.")
-	
+
 	return (bd_mult, bd_single)
 
 def apply_bd_map(data, bd_mult, bd_single):
@@ -214,9 +246,9 @@ def find_limits(data, method='simple'):
 				new_max = np.sum(data[i-wv:i+wv_1,j-wv:j+wv_1])/ws
 				if new_max > curr_max:
 					curr_max = new_max
-		v_max = curr_max	
+		v_max = curr_max
 	else:
 		print("ERROR: in find_limits (lumin_proc.py) - unknown keyword for scale maxima search")
-		return False		
+		return False
 	v_min = (np.sum(data[:20, :20]) + np.sum(data[-20:, :20]) + np.sum(data[:20,-20:]) + np.sum(data[-20:,-20:]))/1600.0
 	return (v_min, v_max)
